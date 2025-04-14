@@ -5,6 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wordle</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          animation: {
+            'shake': 'shake 0.5s ease-in-out',
+            'fadeIn': 'fadeIn 0.5s ease-in-out',
+            'pulse': 'pulse 1.5s ease-in-out infinite',
+          },
+        },
+      },
+    }
+  </script>
   <style>
     @keyframes flipIn {
       0% {
@@ -20,10 +34,53 @@
     .animate-flipIn {
       animation: flipIn 0.4s ease forwards;
     }
-  </style>  
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-5px); }
+      40% { transform: translateX(5px); }
+      60% { transform: translateX(-3px); }
+      80% { transform: translateX(3px); }
+    }
+    
+    .animate-shake {
+      animation: shake 0.5s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    
+    .animate-fadeIn {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .animate-pulse {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+  </style>
+  <script>
+    // Inicializar el tema al cargar la página
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem("theme");
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      
+      if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    });
+  </script>
 </head>
-<body class="bg-gray-100 min-h-screen flex justify-center items-center">
-  <div id="root" class="w-full max-w-sm mx-auto px-2"></div>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen flex justify-center items-center">
+  <div id="root" class="w-full max-w-sm mx-auto px-2 py-4"></div>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

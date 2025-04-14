@@ -1,3 +1,5 @@
+"use client"
+
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
 import Grid from "./components/Grid"
@@ -6,6 +8,8 @@ import Keyboard from "./components/Keyboard"
 import { evaluarIntento, type LetraEstado } from "./utils/getLetraEstado"
 import { getPalabraSecreta } from "./utils/getPalabraSecreta"
 import { palabrasValidas } from "./utils/palabrasValidas"
+import DarkModeToggle from "./components/DarkModeToggle"
+import StatsModal from "./components/StatsModal"
 
 const MAX_INTENTOS = 6
 
@@ -16,25 +20,51 @@ const Game: React.FC = () => {
   const [ganaste, setGanaste] = useState<boolean | null>(null)
   const [letrasEstado, setLetrasEstado] = useState<Record<string, LetraEstado>>({})
   const [mensajeError, setMensajeError] = useState<string>("")
-  const [stats, setStats] = useState<{ ganadas: number; perdidas: number }>({ ganadas: 0, perdidas: 0 })
+  const [animacionError, setAnimacionError] = useState(false)
+  const [stats, setStats] = useState<{
+    ganadas: number
+    perdidas: number
+    distribucion: Record<number, number>
+  }>({
+    ganadas: 0,
+    perdidas: 0,
+    distribucion: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
+  })
 
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setPalabraSecreta(getPalabraSecreta())
     const guardadas = localStorage.getItem("stats")
-    if (guardadas) setStats(JSON.parse(guardadas))
+    if (guardadas) {
+      try {
+        const parsedStats = JSON.parse(guardadas)
+        // Asegurarse de que tenga la estructura correcta
+        if (!parsedStats.distribucion) {
+          parsedStats.distribucion = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }
+        }
+        setStats(parsedStats)
+      } catch (e) {
+        console.error("Error al cargar estadísticas:", e)
+      }
+    }
   }, [])
 
   useEffect(() => {
     inputRef.current?.focus()
   }, [intentoActual])
 
-  const guardarStats = (resultado: "ganada" | "perdida") => {
-    const nuevasStats =
-      resultado === "ganada"
-        ? { ...stats, ganadas: stats.ganadas + 1 }
-        : { ...stats, perdidas: stats.perdidas + 1 }
+  const guardarStats = (resultado: "ganada" | "perdida", intentosUsados?: number) => {
+    const nuevasStats = { ...stats }
+
+    if (resultado === "ganada") {
+      nuevasStats.ganadas += 1
+      if (intentosUsados && intentosUsados <= 6) {
+        nuevasStats.distribucion[intentosUsados] = (nuevasStats.distribucion[intentosUsados] || 0) + 1
+      }
+    } else {
+      nuevasStats.perdidas += 1
+    }
 
     setStats(nuevasStats)
     localStorage.setItem("stats", JSON.stringify(nuevasStats))
@@ -51,10 +81,13 @@ const Game: React.FC = () => {
     setMensajeError("") // borrar errores anteriores
 
     if (letra === "enter") {
-      if (intentoActual.length !== palabraSecreta.length) return
+      if (intentoActual.length !== palabraSecreta.length) {
+        mostrarError("La palabra debe tener 5 letras")
+        return
+      }
 
       if (!palabrasValidas.has(intentoActual)) {
-        setMensajeError("Palabra no válida")
+        mostrarError("Palabra no válida")
         return
       }
 
@@ -66,7 +99,7 @@ const Game: React.FC = () => {
 
       if (intentoActual === palabraSecreta) {
         setGanaste(true)
-        guardarStats("ganada")
+        guardarStats("ganada", nuevosIntentos.length)
       } else if (nuevosIntentos.length >= MAX_INTENTOS) {
         setGanaste(false)
         guardarStats("perdida")
@@ -78,6 +111,12 @@ const Game: React.FC = () => {
     } else if (/^[a-zñ]$/.test(letra) && intentoActual.length < palabraSecreta.length) {
       setIntentoActual((prev) => prev + letra)
     }
+  }
+
+  const mostrarError = (mensaje: string) => {
+    setMensajeError(mensaje)
+    setAnimacionError(true)
+    setTimeout(() => setAnimacionError(false), 500)
   }
 
   const actualizarEstados = (intento: string, resultado: LetraEstado[]) => {
@@ -109,16 +148,19 @@ const Game: React.FC = () => {
   }
 
   if (!palabraSecreta) {
-    return <div className="text-center mt-10 font-semibold">Cargando palabra...</div>
+    return <div className="text-center mt-10 font-semibold dark:text-white">Cargando palabra...</div>
   }
 
   return (
-    <div
-      className="flex flex-col items-center w-full max-w-xs mx-auto"
-      tabIndex={0}
-      onKeyDown={handleKeyDown}
-    >
-      <h1 className="text-xl sm:text-2xl font-bold mb-4 text-center">LA PALABRA DEL DÍA</h1>
+    <div className="flex flex-col items-center w-full max-w-xs mx-auto" tabIndex={0} onKeyDown={handleKeyDown}>
+      <div className="w-full flex justify-between items-center mb-4">
+        <h1 className="text-xl sm:text-2xl font-bold text-center dark:text-white">LA PALABRA DEL DÍA</h1>
+        <DarkModeToggle />
+      </div>
+
+      <div className="mb-4">
+        <StatsModal stats={stats} />
+      </div>
 
       <Grid
         intentos={intentos}
@@ -126,6 +168,7 @@ const Game: React.FC = () => {
         maxIntentos={MAX_INTENTOS}
         longitudPalabra={palabraSecreta.length}
         palabraSecreta={palabraSecreta}
+        animacionError={animacionError}
       />
 
       <input
@@ -139,18 +182,15 @@ const Game: React.FC = () => {
 
       <Keyboard letrasEstado={letrasEstado} onKeyClick={handleKeyInput} />
 
-      {mensajeError && <p className="text-red-600 text-sm mt-2">{mensajeError}</p>}
+      {mensajeError && <p className="text-red-600 dark:text-red-400 text-sm mt-2 animate-fadeIn">{mensajeError}</p>}
 
       {ganaste !== null && (
         <>
-          <ResultMessage ganaste={ganaste} />
-          {!ganaste && (
-            <p className="mt-1 text-sm text-gray-600">La palabra era: <strong>{palabraSecreta}</strong></p>
-          )}
+          <ResultMessage ganaste={ganaste} palabraSecreta={!ganaste ? palabraSecreta : undefined} />
 
           <button
             onClick={reiniciarJuego}
-            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
+            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm transition-colors duration-200 active:scale-95"
           >
             Jugar de nuevo
           </button>

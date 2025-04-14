@@ -21,7 +21,7 @@ const getColor = (estado: LetraEstado | undefined) => {
     case "incorrecta":
       return "bg-gray-400 text-white"
     default:
-      return "bg-gray-200 text-black"
+      return "bg-gray-200 dark:bg-gray-600 text-black dark:text-white"
   }
 }
 
@@ -37,7 +37,7 @@ const Keyboard: React.FC<KeyboardProps> = ({ letrasEstado, onKeyClick }) => {
               <button
                 key={letra}
                 onClick={() => onKeyClick(letra.toLowerCase())}
-                className={`w-7 h-9 rounded font-bold text-xs ${colorClass} transition-colors duration-300`}
+                className={`w-7 h-9 rounded font-bold text-xs ${colorClass} transition-colors duration-300 hover:opacity-80 active:scale-95`}
               >
                 {letra}
               </button>
@@ -48,13 +48,13 @@ const Keyboard: React.FC<KeyboardProps> = ({ letrasEstado, onKeyClick }) => {
       <div className="flex gap-1 mt-1 w-full justify-center">
         <button
           onClick={() => onKeyClick("enter")}
-          className="px-1 h-9 bg-blue-500 text-white rounded font-bold text-xs"
+          className="px-1 h-9 bg-blue-500 text-white rounded font-bold text-xs hover:bg-blue-600 active:scale-95"
         >
           ENTER
         </button>
         <button
           onClick={() => onKeyClick("backspace")}
-          className="px-1 h-9 bg-red-500 text-white rounded font-bold text-xs"
+          className="px-1 h-9 bg-red-500 text-white rounded font-bold text-xs hover:bg-red-600 active:scale-95"
         >
           ⌫
         </button>
