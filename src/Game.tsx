@@ -5,6 +5,7 @@ import ResultMessage from "./components/ResultMessage"
 import Keyboard from "./components/Keyboard"
 import { evaluarIntento, type LetraEstado } from "./utils/getLetraEstado"
 import { getPalabraSecreta } from "./utils/getPalabraSecreta"
+import { palabrasValidas } from "./utils/palabrasValidas"
 
 const MAX_INTENTOS = 6
 
@@ -14,15 +15,30 @@ const Game: React.FC = () => {
   const [intentoActual, setIntentoActual] = useState<string>("")
   const [ganaste, setGanaste] = useState<boolean | null>(null)
   const [letrasEstado, setLetrasEstado] = useState<Record<string, LetraEstado>>({})
+  const [mensajeError, setMensajeError] = useState<string>("")
+  const [stats, setStats] = useState<{ ganadas: number; perdidas: number }>({ ganadas: 0, perdidas: 0 })
+
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setPalabraSecreta(getPalabraSecreta())
+    const guardadas = localStorage.getItem("stats")
+    if (guardadas) setStats(JSON.parse(guardadas))
   }, [])
 
   useEffect(() => {
     inputRef.current?.focus()
   }, [intentoActual])
+
+  const guardarStats = (resultado: "ganada" | "perdida") => {
+    const nuevasStats =
+      resultado === "ganada"
+        ? { ...stats, ganadas: stats.ganadas + 1 }
+        : { ...stats, perdidas: stats.perdidas + 1 }
+
+    setStats(nuevasStats)
+    localStorage.setItem("stats", JSON.stringify(nuevasStats))
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const key = e.key.toLowerCase()
@@ -32,22 +48,31 @@ const Game: React.FC = () => {
   const handleKeyInput = (letra: string) => {
     if (!palabraSecreta || ganaste !== null) return
 
+    setMensajeError("") // borrar errores anteriores
+
     if (letra === "enter") {
-      if (intentoActual.length === palabraSecreta.length) {
-        const nuevosIntentos = [...intentos, intentoActual]
-        const resultado = evaluarIntento(intentoActual, palabraSecreta)
-        actualizarEstados(intentoActual, resultado)
+      if (intentoActual.length !== palabraSecreta.length) return
 
-        setIntentos(nuevosIntentos)
-
-        if (intentoActual === palabraSecreta) {
-          setGanaste(true)
-        } else if (nuevosIntentos.length >= MAX_INTENTOS) {
-          setGanaste(false)
-        }
-
-        setIntentoActual("")
+      if (!palabrasValidas.has(intentoActual)) {
+        setMensajeError("Palabra no válida")
+        return
       }
+
+      const nuevosIntentos = [...intentos, intentoActual]
+      const resultado = evaluarIntento(intentoActual, palabraSecreta)
+      actualizarEstados(intentoActual, resultado)
+
+      setIntentos(nuevosIntentos)
+
+      if (intentoActual === palabraSecreta) {
+        setGanaste(true)
+        guardarStats("ganada")
+      } else if (nuevosIntentos.length >= MAX_INTENTOS) {
+        setGanaste(false)
+        guardarStats("perdida")
+      }
+
+      setIntentoActual("")
     } else if (letra === "backspace") {
       setIntentoActual((prev) => prev.slice(0, -1))
     } else if (/^[a-zñ]$/.test(letra) && intentoActual.length < palabraSecreta.length) {
@@ -80,6 +105,7 @@ const Game: React.FC = () => {
     setIntentoActual("")
     setGanaste(null)
     setLetrasEstado({})
+    setMensajeError("")
   }
 
   if (!palabraSecreta) {
@@ -87,7 +113,11 @@ const Game: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col items-center w-full max-w-xs mx-auto" tabIndex={0} onKeyDown={handleKeyDown}>
+    <div
+      className="flex flex-col items-center w-full max-w-xs mx-auto"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+    >
       <h1 className="text-xl sm:text-2xl font-bold mb-4 text-center">LA PALABRA DEL DÍA</h1>
 
       <Grid
@@ -109,15 +139,22 @@ const Game: React.FC = () => {
 
       <Keyboard letrasEstado={letrasEstado} onKeyClick={handleKeyInput} />
 
-      {ganaste !== null && <ResultMessage ganaste={ganaste} />}
+      {mensajeError && <p className="text-red-600 text-sm mt-2">{mensajeError}</p>}
 
       {ganaste !== null && (
-        <button
-          onClick={reiniciarJuego}
-          className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
-        >
-          Jugar de nuevo
-        </button>
+        <>
+          <ResultMessage ganaste={ganaste} />
+          {!ganaste && (
+            <p className="mt-1 text-sm text-gray-600">La palabra era: <strong>{palabraSecreta}</strong></p>
+          )}
+
+          <button
+            onClick={reiniciarJuego}
+            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
+          >
+            Jugar de nuevo
+          </button>
+        </>
       )}
     </div>
   )
