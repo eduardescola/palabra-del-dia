@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
 import Grid from "./components/Grid"
@@ -152,11 +150,14 @@ const Game: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col items-center w-full max-w-xs mx-auto" tabIndex={0} onKeyDown={handleKeyDown}>
-      <div className="w-full flex justify-between items-center mb-4">
-        <h1 className="text-xl sm:text-2xl font-bold text-center dark:text-white">LA PALABRA DEL DÍA</h1>
+    <div className="flex flex-col items-center w-full max-w-xs mx-auto relative" tabIndex={0} onKeyDown={handleKeyDown}>
+      {/* Toggle de modo oscuro en posición absoluta */}
+      <div className="absolute right-0 top-0">
         <DarkModeToggle />
       </div>
+
+      {/* Título centrado */}
+      <h1 className="text-xl sm:text-2xl font-bold mb-4 text-center dark:text-white">LA PALABRA DEL DÍA</h1>
 
       <div className="mb-4">
         <StatsModal stats={stats} />
