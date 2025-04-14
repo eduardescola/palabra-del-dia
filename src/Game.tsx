@@ -4,16 +4,21 @@ import Grid from "./components/Grid"
 import ResultMessage from "./components/ResultMessage"
 import Keyboard from "./components/Keyboard"
 import { evaluarIntento, type LetraEstado } from "./utils/getLetraEstado"
+import { getPalabraSecreta } from "./utils/getPalabraSecreta"
 
-const PALABRA_SECRETA = "react"
 const MAX_INTENTOS = 6
 
 const Game: React.FC = () => {
+  const [palabraSecreta, setPalabraSecreta] = useState<string | null>(null)
   const [intentos, setIntentos] = useState<string[]>([])
   const [intentoActual, setIntentoActual] = useState<string>("")
   const [ganaste, setGanaste] = useState<boolean | null>(null)
   const [letrasEstado, setLetrasEstado] = useState<Record<string, LetraEstado>>({})
   const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setPalabraSecreta(getPalabraSecreta())
+  }, [])
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -25,17 +30,17 @@ const Game: React.FC = () => {
   }
 
   const handleKeyInput = (letra: string) => {
-    if (ganaste !== null) return
+    if (!palabraSecreta || ganaste !== null) return
 
     if (letra === "enter") {
-      if (intentoActual.length === PALABRA_SECRETA.length) {
+      if (intentoActual.length === palabraSecreta.length) {
         const nuevosIntentos = [...intentos, intentoActual]
-        const resultado = evaluarIntento(intentoActual, PALABRA_SECRETA)
+        const resultado = evaluarIntento(intentoActual, palabraSecreta)
         actualizarEstados(intentoActual, resultado)
 
         setIntentos(nuevosIntentos)
 
-        if (intentoActual === PALABRA_SECRETA) {
+        if (intentoActual === palabraSecreta) {
           setGanaste(true)
         } else if (nuevosIntentos.length >= MAX_INTENTOS) {
           setGanaste(false)
@@ -45,7 +50,7 @@ const Game: React.FC = () => {
       }
     } else if (letra === "backspace") {
       setIntentoActual((prev) => prev.slice(0, -1))
-    } else if (/^[a-zñ]$/.test(letra) && intentoActual.length < PALABRA_SECRETA.length) {
+    } else if (/^[a-zñ]$/.test(letra) && intentoActual.length < palabraSecreta.length) {
       setIntentoActual((prev) => prev + letra)
     }
   }
@@ -70,10 +75,15 @@ const Game: React.FC = () => {
   }
 
   const reiniciarJuego = () => {
+    setPalabraSecreta(getPalabraSecreta())
     setIntentos([])
     setIntentoActual("")
     setGanaste(null)
     setLetrasEstado({})
+  }
+
+  if (!palabraSecreta) {
+    return <div className="text-center mt-10 font-semibold">Cargando palabra...</div>
   }
 
   return (
@@ -84,8 +94,8 @@ const Game: React.FC = () => {
         intentos={intentos}
         intentoActual={intentoActual}
         maxIntentos={MAX_INTENTOS}
-        longitudPalabra={PALABRA_SECRETA.length}
-        palabraSecreta={PALABRA_SECRETA}
+        longitudPalabra={palabraSecreta.length}
+        palabraSecreta={palabraSecreta}
       />
 
       <input
