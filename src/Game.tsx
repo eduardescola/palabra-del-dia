@@ -19,14 +19,17 @@ const Game: React.FC = () => {
   const [letrasEstado, setLetrasEstado] = useState<Record<string, LetraEstado>>({})
   const [mensajeError, setMensajeError] = useState<string>("")
   const [animacionError, setAnimacionError] = useState(false)
+  const [puntajeFinal, setPuntajeFinal] = useState<{ correctas: number; presentes: number } | null>(null)
   const [stats, setStats] = useState<{
     ganadas: number
     perdidas: number
     distribucion: Record<number, number>
+    puntajes: number[]
   }>({
     ganadas: 0,
     perdidas: 0,
     distribucion: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
+    puntajes: [],
   })
 
   const inputRef = useRef<HTMLInputElement>(null)
@@ -37,9 +40,11 @@ const Game: React.FC = () => {
     if (guardadas) {
       try {
         const parsedStats = JSON.parse(guardadas)
-        // Asegurarse de que tenga la estructura correcta
         if (!parsedStats.distribucion) {
           parsedStats.distribucion = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }
+        }
+        if (!parsedStats.puntajes) {
+          parsedStats.puntajes = []
         }
         setStats(parsedStats)
       } catch (e) {
@@ -52,16 +57,32 @@ const Game: React.FC = () => {
     inputRef.current?.focus()
   }, [intentoActual])
 
+  const calcularPuntajeFinal = (intento: string, palabraSecreta: string) => {
+    const resultado = evaluarIntento(intento, palabraSecreta)
+    let correctas = 0
+    let presentes = 0
+    
+    resultado.forEach((estado) => {
+      if (estado === "correcta") correctas += 1
+      if (estado === "presente") presentes += 1
+    })
+
+    return { correctas, presentes }
+  }
+
   const guardarStats = (resultado: "ganada" | "perdida", intentosUsados?: number) => {
     const nuevasStats = { ...stats }
 
     if (resultado === "ganada") {
       nuevasStats.ganadas += 1
-      if (intentosUsados && intentosUsados <= 6) {
+      if (intentosUsados && intentosUsados <= MAX_INTENTOS) {
         nuevasStats.distribucion[intentosUsados] = (nuevasStats.distribucion[intentosUsados] || 0) + 1
+        const puntaje = puntajeFinal ? puntajeFinal.correctas * 2 + puntajeFinal.presentes : 0
+        nuevasStats.puntajes.push(puntaje)
       }
     } else {
       nuevasStats.perdidas += 1
+      nuevasStats.puntajes.push(0)
     }
 
     setStats(nuevasStats)
@@ -76,7 +97,7 @@ const Game: React.FC = () => {
   const handleKeyInput = (letra: string) => {
     if (!palabraSecreta || ganaste !== null) return
 
-    setMensajeError("") // borrar errores anteriores
+    setMensajeError("")
 
     if (letra === "enter") {
       if (intentoActual.length !== palabraSecreta.length) {
@@ -92,6 +113,10 @@ const Game: React.FC = () => {
       const nuevosIntentos = [...intentos, intentoActual]
       const resultado = evaluarIntento(intentoActual, palabraSecreta)
       actualizarEstados(intentoActual, resultado)
+
+      // Calcular puntaje del intento actual
+      const puntaje = calcularPuntajeFinal(intentoActual, palabraSecreta)
+      setPuntajeFinal(puntaje)
 
       setIntentos(nuevosIntentos)
 
@@ -143,6 +168,7 @@ const Game: React.FC = () => {
     setGanaste(null)
     setLetrasEstado({})
     setMensajeError("")
+    setPuntajeFinal(null)
   }
 
   if (!palabraSecreta) {
@@ -150,14 +176,18 @@ const Game: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col items-center w-full max-w-xs mx-auto relative" tabIndex={0} onKeyDown={handleKeyDown}>
-      {/* Toggle de modo oscuro en posición absoluta */}
+    <div
+      className="flex flex-col items-center w-full max-w-xs mx-auto relative"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+    >
       <div className="absolute right-0 top-0">
         <DarkModeToggle />
       </div>
 
-      {/* Título centrado */}
-      <h1 className="text-xl sm:text-2xl font-bold mb-4 font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 text-center">LA PALABRA DEL DÍA</h1>
+      <h1 className="text-xl sm:text-2xl font-bold mb-4 font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 text-center">
+        LA PALABRA DEL DÍA
+      </h1>
 
       <div className="mb-4">
         <StatsModal stats={stats} />
@@ -183,11 +213,19 @@ const Game: React.FC = () => {
 
       <Keyboard letrasEstado={letrasEstado} onKeyClick={handleKeyInput} />
 
-      {mensajeError && <p className="text-red-600 dark:text-red-400 text-sm mt-2 animate-fadeIn">{mensajeError}</p>}
+      {mensajeError && (
+        <p className="text-red-600 dark:text-red-400 text-sm mt-2 animate-fadeIn">
+          {mensajeError}
+        </p>
+      )}
 
-      {ganaste !== null && (
+      {ganaste !== null && puntajeFinal && (
         <>
-          <ResultMessage ganaste={ganaste} palabraSecreta={!ganaste ? palabraSecreta : undefined} />
+          <ResultMessage
+            ganaste={ganaste}
+            palabraSecreta={!ganaste ? palabraSecreta : undefined}
+            puntaje={puntajeFinal}
+          />
 
           <button
             onClick={reiniciarJuego}

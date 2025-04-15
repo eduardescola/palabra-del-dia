@@ -6,6 +6,7 @@ interface StatsModalProps {
     ganadas: number
     perdidas: number
     distribucion?: Record<number, number>
+    puntajes: number[]
   }
 }
 
@@ -14,18 +15,13 @@ const StatsModal: React.FC<StatsModalProps> = ({ stats }) => {
 
   const totalJuegos = stats.ganadas + stats.perdidas
   const porcentajeVictorias = totalJuegos > 0 ? Math.round((stats.ganadas / totalJuegos) * 100) : 0
-
-  // Distribución de intentos (simulada si no existe)
-  const distribucion = stats.distribucion || {
-    1: 0,
-    2: 0,
-    3: 0,
-    4: 0,
-    5: 0,
-    6: 0,
-  }
-
+  const distribucion = stats.distribucion || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }
   const maxValue = Math.max(...Object.values(distribucion), 1)
+
+  const puntajePromedio =
+    stats.puntajes.length > 0
+      ? Math.round(stats.puntajes.reduce((a, b) => a + b, 0) / stats.puntajes.length)
+      : 0
 
   return (
     <>
@@ -45,20 +41,7 @@ const StatsModal: React.FC<StatsModalProps> = ({ stats }) => {
                 onClick={() => setIsOpen(false)}
                 className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                ✖
               </button>
             </div>
 
@@ -72,13 +55,13 @@ const StatsModal: React.FC<StatsModalProps> = ({ stats }) => {
                 <p className="text-xs text-gray-500 dark:text-gray-400">Victorias</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold dark:text-white">{stats.ganadas}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Ganadas</p>
+                <p className="text-2xl font-bold dark:text-white">{puntajePromedio}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Puntaje prom.</p>
               </div>
             </div>
 
             <h3 className="font-semibold mb-2 dark:text-white">Distribución de intentos</h3>
-            <div className="space-y-1">
+            <div className="space-y-1 mb-4">
               {Object.entries(distribucion).map(([intento, cantidad]) => (
                 <div key={intento} className="flex items-center gap-2">
                   <span className="w-4 text-xs dark:text-white">{intento}</span>
@@ -88,6 +71,18 @@ const StatsModal: React.FC<StatsModalProps> = ({ stats }) => {
                   >
                     {cantidad > 0 && cantidad}
                   </div>
+                </div>
+              ))}
+            </div>
+
+            <h3 className="font-semibold mb-2 dark:text-white">Puntajes recientes</h3>
+            <div className="flex gap-1 flex-wrap">
+              {stats.puntajes.slice(-10).map((puntaje, idx) => (
+                <div
+                  key={idx}
+                  className="bg-indigo-500 text-white px-2 py-1 rounded text-xs font-bold"
+                >
+                  {puntaje}
                 </div>
               ))}
             </div>

@@ -13,11 +13,16 @@ export const evaluarIntento = (intento: string, palabra: string): LetraEstado[] 
     }
   }
 
-  // Verifica presentes (amarillas)
+  // Verifica las presentes (amarillas)
   for (let i = 0; i < palabra.length; i++) {
+    // Solo marca como "presente" si la letra no es "correcta" y está disponible en la palabra
     if (estados[i] !== "correcta" && palabraArray.includes(intentoArray[i])) {
       estados[i] = "presente";
-      palabraArray[palabraArray.indexOf(intentoArray[i])] = ""; // Elimina la letra ya usada
+      // Elimina la letra ya usada para evitar duplicados
+      const index = palabraArray.indexOf(intentoArray[i]);
+      if (index !== -1) {
+        palabraArray[index] = ""; // Marca la letra como utilizada
+      }
     }
   }
 
