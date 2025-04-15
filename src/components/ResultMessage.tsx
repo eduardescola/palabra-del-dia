@@ -13,7 +13,7 @@ const ResultMessage: React.FC<ResultMessageProps> = ({ ganaste, palabraSecreta }
           ganaste ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
         }`}
       >
-        {ganaste ? "¡Felicidades! ¡Has ganado!" : "¡Lo siento! Has perdido."}
+        {ganaste ? "¡Felicidades! 🎉" : "¡Lo siento! 😔"}
       </h2>
 
       {!ganaste && palabraSecreta && (
