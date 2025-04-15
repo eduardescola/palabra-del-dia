@@ -157,7 +157,7 @@ const Game: React.FC = () => {
       </div>
 
       {/* Título centrado */}
-      <h1 className="text-xl sm:text-2xl font-bold mb-4 text-center dark:text-white">LA PALABRA DEL DÍA</h1>
+      <h1 className="text-xl sm:text-2xl font-bold mb-4 font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 text-center">LA PALABRA DEL DÍA</h1>
 
       <div className="mb-4">
         <StatsModal stats={stats} />
