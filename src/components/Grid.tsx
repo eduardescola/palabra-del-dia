@@ -53,11 +53,12 @@ const Grid: React.FC<GridProps> = ({
           return (
             <div
               key={j}
-              className={`w-9 h-9 border-2 rounded flex items-center justify-center text-base font-bold uppercase transition-all duration-300 ${
-                i < intentos.length
+              className={`w-9 h-9 border-2 rounded flex items-center justify-center text-base font-bold uppercase transition-all duration-300 
+                ${i < intentos.length
                   ? getColor(estados[j])
-                  : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-              } ${animacion} ${pulsoClase}`}
+                  : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"}
+                text-black dark:text-white
+                ${animacion} ${pulsoClase}`}
             >
               {letra !== " " ? letra : ""}
             </div>
