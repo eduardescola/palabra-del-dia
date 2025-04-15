@@ -191,9 +191,9 @@ const Game: React.FC = () => {
 
           <button
             onClick={reiniciarJuego}
-            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm transition-colors duration-200 active:scale-95"
+            className="mt-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-5 py-2 rounded-2xl font-semibold shadow-md hover:shadow-xl transition-all duration-300 active:scale-95"
           >
-            Jugar de nuevo
+            🎮 Jugar de nuevo
           </button>
         </>
       )}
