@@ -1,3 +1,4 @@
+import type React from "react"
 import { useEffect } from "react"
 import confetti from "canvas-confetti"
 
@@ -11,25 +12,33 @@ interface ResultMessageProps {
   onClose: () => void
 }
 
+const lanzarConfeti = () => {
+  confetti({
+    particleCount: 150,
+    spread: 80,
+    origin: { y: 0.6 },
+  })
+}
+
+const explosionTriste = () => {
+  confetti({
+    particleCount: 100,
+    spread: 60,
+    origin: { y: 0.6 },
+    colors: ["#ff4d4f", "#a83232"],
+    scalar: 0.9,
+  })
+}
+
 const ResultMessage: React.FC<ResultMessageProps> = ({ ganaste, palabraSecreta, puntaje, onClose }) => {
   const { correctas, presentes } = puntaje
   const puntajeTotal = correctas * 2 + presentes
 
   useEffect(() => {
     if (ganaste) {
-      confetti({
-        particleCount: 120,
-        spread: 100,
-        origin: { y: 0.6 },
-      })
+      lanzarConfeti()
     } else {
-      // Animación de "sacudida" al perder
-      const body = document.body
-      body.classList.add("shake")
-
-      setTimeout(() => {
-        body.classList.remove("shake")
-      }, 1000)
+      explosionTriste()
     }
 
     const timer = setTimeout(onClose, 4000)
@@ -37,10 +46,10 @@ const ResultMessage: React.FC<ResultMessageProps> = ({ ganaste, palabraSecreta, 
   }, [ganaste, onClose])
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-zinc-800 shadow-lg rounded-2xl px-6 py-4 animate-fadeInUp border dark:border-zinc-700">
+    <div className="fixed inset-0 flex justify-center items-center z-50">
+      <div className="bg-white dark:bg-zinc-800 shadow-lg rounded-2xl px-6 py-4 animate-fadeInUp border dark:border-zinc-700 max-w-xs text-center">
         <h2
-          className={`text-lg font-bold text-center ${
+          className={`text-lg font-bold ${
             ganaste ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
           }`}
         >
@@ -48,12 +57,12 @@ const ResultMessage: React.FC<ResultMessageProps> = ({ ganaste, palabraSecreta, 
         </h2>
 
         {!ganaste && palabraSecreta && (
-          <p className="text-center mt-1 text-gray-700 dark:text-gray-300">
+          <p className="mt-1 text-gray-700 dark:text-gray-300">
             La palabra era: <strong>{palabraSecreta}</strong>
           </p>
         )}
 
-        <div className="mt-3 text-sm text-gray-800 dark:text-gray-200 text-center">
+        <div className="mt-3 text-sm text-gray-800 dark:text-gray-200">
           <p>
             Letras correctas (🟩): <strong>{correctas}</strong>
           </p>
