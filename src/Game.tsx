@@ -70,14 +70,22 @@ const Game: React.FC = () => {
     return { correctas, presentes }
   }
 
-  const guardarStats = (resultado: "ganada" | "perdida", intentosUsados?: number) => {
+  // Remplaza tu función guardarStats con esta versión modificada:
+  const guardarStats = (
+    resultado: "ganada" | "perdida",
+    intentosUsados?: number,
+    intento?: string
+  ) => {
     const nuevasStats = { ...stats }
 
     if (resultado === "ganada") {
       nuevasStats.ganadas += 1
       if (intentosUsados && intentosUsados <= MAX_INTENTOS) {
         nuevasStats.distribucion[intentosUsados] = (nuevasStats.distribucion[intentosUsados] || 0) + 1
-        const puntaje = puntajeFinal ? puntajeFinal.correctas * 2 + puntajeFinal.presentes : 0
+        const { correctas, presentes } = intento && palabraSecreta
+          ? calcularPuntajeFinal(intento, palabraSecreta)
+          : { correctas: 0, presentes: 0 }
+        const puntaje = correctas * 2 + presentes
         nuevasStats.puntajes.push(puntaje)
       }
     } else {
@@ -122,11 +130,11 @@ const Game: React.FC = () => {
 
       if (intentoActual === palabraSecreta) {
         setGanaste(true)
-        guardarStats("ganada", nuevosIntentos.length)
+        guardarStats("ganada", nuevosIntentos.length, intentoActual) // 👈 le pasamos el intento actual
       } else if (nuevosIntentos.length >= MAX_INTENTOS) {
         setGanaste(false)
         guardarStats("perdida")
-      }
+      }      
 
       setIntentoActual("")
     } else if (letra === "backspace") {
