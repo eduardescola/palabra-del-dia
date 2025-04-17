@@ -20,6 +20,7 @@ const Game: React.FC = () => {
   const [mensajeError, setMensajeError] = useState<string>("")
   const [animacionError, setAnimacionError] = useState(false)
   const [puntajeFinal, setPuntajeFinal] = useState<{ correctas: number; presentes: number } | null>(null)
+  const [mostrarResultado, setMostrarResultado] = useState<boolean>(false)
   const [stats, setStats] = useState<{
     ganadas: number
     perdidas: number
@@ -61,7 +62,7 @@ const Game: React.FC = () => {
     const resultado = evaluarIntento(intento, palabraSecreta)
     let correctas = 0
     let presentes = 0
-    
+
     resultado.forEach((estado) => {
       if (estado === "correcta") correctas += 1
       if (estado === "presente") presentes += 1
@@ -70,7 +71,6 @@ const Game: React.FC = () => {
     return { correctas, presentes }
   }
 
-  // Remplaza tu función guardarStats con esta versión modificada:
   const guardarStats = (
     resultado: "ganada" | "perdida",
     intentosUsados?: number,
@@ -122,7 +122,6 @@ const Game: React.FC = () => {
       const resultado = evaluarIntento(intentoActual, palabraSecreta)
       actualizarEstados(intentoActual, resultado)
 
-      // Calcular puntaje del intento actual
       const puntaje = calcularPuntajeFinal(intentoActual, palabraSecreta)
       setPuntajeFinal(puntaje)
 
@@ -130,11 +129,13 @@ const Game: React.FC = () => {
 
       if (intentoActual === palabraSecreta) {
         setGanaste(true)
-        guardarStats("ganada", nuevosIntentos.length, intentoActual) // 👈 le pasamos el intento actual
+        guardarStats("ganada", nuevosIntentos.length, intentoActual)
+        setMostrarResultado(true)
       } else if (nuevosIntentos.length >= MAX_INTENTOS) {
         setGanaste(false)
         guardarStats("perdida")
-      }      
+        setMostrarResultado(true)
+      }
 
       setIntentoActual("")
     } else if (letra === "backspace") {
@@ -177,6 +178,7 @@ const Game: React.FC = () => {
     setLetrasEstado({})
     setMensajeError("")
     setPuntajeFinal(null)
+    setMostrarResultado(false)
   }
 
   if (!palabraSecreta) {
@@ -227,21 +229,22 @@ const Game: React.FC = () => {
         </p>
       )}
 
-      {ganaste !== null && puntajeFinal && (
-        <>
-          <ResultMessage
-            ganaste={ganaste}
-            palabraSecreta={!ganaste ? palabraSecreta : undefined}
-            puntaje={puntajeFinal}
-          />
+      {ganaste !== null && puntajeFinal && mostrarResultado && (
+        <ResultMessage
+          ganaste={ganaste}
+          palabraSecreta={!ganaste ? palabraSecreta : undefined}
+          puntaje={puntajeFinal}
+          onClose={() => setMostrarResultado(false)}
+        />
+      )}
 
-          <button
-            onClick={reiniciarJuego}
-            className="mt-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-5 py-2 rounded-2xl font-semibold shadow-md hover:shadow-xl transition-all duration-300 active:scale-95"
-          >
-            🎮 Jugar de nuevo
-          </button>
-        </>
+      {ganaste !== null && (
+        <button
+          onClick={reiniciarJuego}
+          className="mt-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-5 py-2 rounded-2xl font-semibold shadow-md hover:shadow-xl transition-all duration-300 active:scale-95"
+        >
+          🎮 Jugar de nuevo
+        </button>
       )}
     </div>
   )
