@@ -56,7 +56,7 @@ const Game: React.FC = () => {
 
   useEffect(() => {
     inputRef.current?.focus()
-  }, [intentoActual])
+  }, [intentoActual, palabraSecreta])
 
   const calcularPuntajeFinal = (intento: string, palabraSecreta: string) => {
     const resultado = evaluarIntento(intento, palabraSecreta)
@@ -71,20 +71,15 @@ const Game: React.FC = () => {
     return { correctas, presentes }
   }
 
-  const guardarStats = (
-    resultado: "ganada" | "perdida",
-    intentosUsados?: number,
-    intento?: string
-  ) => {
+  const guardarStats = (resultado: "ganada" | "perdida", intentosUsados?: number, intento?: string) => {
     const nuevasStats = { ...stats }
 
     if (resultado === "ganada") {
       nuevasStats.ganadas += 1
       if (intentosUsados && intentosUsados <= MAX_INTENTOS) {
         nuevasStats.distribucion[intentosUsados] = (nuevasStats.distribucion[intentosUsados] || 0) + 1
-        const { correctas, presentes } = intento && palabraSecreta
-          ? calcularPuntajeFinal(intento, palabraSecreta)
-          : { correctas: 0, presentes: 0 }
+        const { correctas, presentes } =
+          intento && palabraSecreta ? calcularPuntajeFinal(intento, palabraSecreta) : { correctas: 0, presentes: 0 }
         const puntaje = correctas * 2 + presentes
         nuevasStats.puntajes.push(puntaje)
       }
@@ -171,26 +166,27 @@ const Game: React.FC = () => {
   }
 
   const reiniciarJuego = () => {
-    setPalabraSecreta(getPalabraSecreta())
-    setIntentos([])
-    setIntentoActual("")
-    setGanaste(null)
-    setLetrasEstado({})
-    setMensajeError("")
-    setPuntajeFinal(null)
-    setMostrarResultado(false)
-  }
+    setPalabraSecreta(getPalabraSecreta(true))  // Usamos "true" para seleccionar una palabra aleatoria
+    setIntentos([])  // Reiniciar intentos
+    setIntentoActual("")  // Limpiar el intento actual
+    setGanaste(null)  // Restablecer estado de victoria
+    setLetrasEstado({})  // Limpiar estado de letras
+    setMensajeError("")  // Limpiar mensaje de error
+    setPuntajeFinal(null)  // Restablecer puntaje final
+    setMostrarResultado(false)  // No mostrar resultado
+  
+    // Focus en el input después de actualizar el estado
+    setTimeout(() => {
+      inputRef.current?.focus()
+    }, 0)
+  }  
 
   if (!palabraSecreta) {
     return <div className="text-center mt-10 font-semibold dark:text-white">Cargando palabra...</div>
   }
 
   return (
-    <div
-      className="flex flex-col items-center w-full max-w-xs mx-auto relative"
-      tabIndex={0}
-      onKeyDown={handleKeyDown}
-    >
+    <div className="flex flex-col items-center w-full max-w-xs mx-auto relative" tabIndex={0} onKeyDown={handleKeyDown}>
       <div className="absolute right-0 top-0">
         <DarkModeToggle />
       </div>
@@ -223,11 +219,7 @@ const Game: React.FC = () => {
 
       <Keyboard letrasEstado={letrasEstado} onKeyClick={handleKeyInput} />
 
-      {mensajeError && (
-        <p className="text-red-600 dark:text-red-400 text-sm mt-2 animate-fadeIn">
-          {mensajeError}
-        </p>
-      )}
+      {mensajeError && <p className="text-red-600 dark:text-red-400 text-sm mt-2 animate-fadeIn">{mensajeError}</p>}
 
       {ganaste !== null && puntajeFinal && mostrarResultado && (
         <ResultMessage
